@@ -8,19 +8,25 @@ from tensorflow.keras.models import load_model
 class ImageProcessor:
 
     def __init__(self):
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        
-        self.model = YOLO(os.path.join(base_dir, "MODELS", "yolov8m.pt"))
-
-        self.unet_model = load_model(
-            os.path.join(base_dir, "MODELS", "unet_best_model_250_160_1024.h5"),
-            compile=False
-        )
-
+        self.model = None
+        self.unet_model = None
         self.boxes = []
         self.labels = []
 
+    def _load_models_if_needed(self):
+        if self.model is None:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            print("Loading YOLOv8 model...")
+            self.model = YOLO(os.path.join(base_dir, "MODELS", "yolov8m.pt"))
+            print("Loading UNet model...")
+            self.unet_model = load_model(
+                os.path.join(base_dir, "MODELS", "unet_best_model_250_160_1024.h5"),
+                compile=False
+            )
+            print("Models loaded successfully!")
+
     def yolo(self, image):
+        self._load_models_if_needed()
 
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -44,6 +50,7 @@ class ImageProcessor:
         return self.labels
 
     def Boxes(self, image, label):
+        self._load_models_if_needed()
 
         self.yolo(image)
 
@@ -58,6 +65,7 @@ class ImageProcessor:
         return None
 
     def unet(self, image, target_label):
+        self._load_models_if_needed()
 
         if target_label == "Background":
             return image
@@ -96,6 +104,7 @@ class ImageProcessor:
         return image
     
     def background_paint(self,img,color):
+        self._load_models_if_needed()
 
         input_data = cv2.resize(img, (160, 160))
         input_data = np.array(input_data, dtype=np.float32) / 255.0
@@ -107,7 +116,7 @@ class ImageProcessor:
         r = int(hex_color[0:2], 16)
         g = int(hex_color[2:4], 16)
         b = int(hex_color[4:6], 16)
-        color = (b,g,r)
+        bg_color = (b,g,r)
         image = img
         pred_mask = np.argmax(unet_mask,axis=-1)
         pred_mask = np.squeeze(pred_mask)
@@ -119,7 +128,7 @@ class ImageProcessor:
         alpha = blurred_mask.astype(float) / 255.0
         alpha = np.expand_dims(alpha, axis=2)
 
-        bg = np.ones_like(image) * color
+        bg = np.ones_like(image) * bg_color
 
         painted = (alpha * image + (1 - alpha) * bg).astype(np.uint8)
         return painted
