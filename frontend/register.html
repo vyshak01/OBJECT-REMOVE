@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photo.ai | Register</title>
+  <link rel="stylesheet" href="index.css">
+  <style>
+    /* Specific overrides for Register */
+    .strength-bar {
+      margin-top: 10px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06); overflow: hidden;
+    }
+    .strength-fill { height: 100%; width: 0%; border-radius: 4px; transition: width 0.3s, background 0.3s; }
+    
+    #message {
+      margin-top: 20px; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500;
+      text-align: center; min-height: 20px; transition: color 0.2s;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Orbs -->
+  <div class="bg-layer">
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+    <div class="bg-blob bg-blob-3"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-noise"></div>
+  </div>
+
+  <div class="auth-wrapper">
+    <div class="glass-card">
+      <span class="eyebrow">Get Started</span>
+      <h1 class="mb-8">Create<br><em>account.</em></h1>
+
+      <div class="field">
+        <label for="name">Full Name</label>
+        <div class="input-wrap">
+          <input type="text" id="name" placeholder="Enter your name" autocomplete="name">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">Work Email</label>
+        <div class="input-wrap">
+          <input type="email" id="email" placeholder="name@company.com" autocomplete="email">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <input type="password" id="password" placeholder="Min. 8 characters" autocomplete="new-password" oninput="checkStrength(this.value)">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+      </div>
+
+      <button class="btn-primary mt-4" id="reg-btn" onclick="sendData()">
+        <span class="btn-text">Create Account</span>
+        <div class="spinner"></div>
+      </button>
+
+      <p id="message"></p>
+
+      <div class="divider">or</div>
+      <p class="text-center" style="font-size: 0.85rem; color: var(--muted);">
+        Already registered? <a href="sign_in.html" class="link">Sign in safely</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function checkStrength(val) {
+      const fill = document.getElementById("strength-fill");
+      let score = 0;
+      if (val.length >= 8)  score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const colors = ["var(--error)","#ffb347","#ffe066","var(--success)"];
+      const widths  = ["25%","50%","75%","100%"];
+      
+      fill.style.width = val.length ? widths[score - 1] || "15%" : "0%";
+      fill.style.background = val.length ? colors[score - 1] || "var(--error)" : "transparent";
+    }
+
+    async function sendData() {
+      const name     = document.getElementById("name").value.trim();
+      const email    = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const message  = document.getElementById("message");
+      const btn      = document.getElementById("reg-btn");
+
+      if (!name || !email || !password) {
+        message.style.color = "var(--error)";
+        message.innerText = "Please fill in all fields.";
+        return;
+      }
+      if (password.length < 8) {
+        message.style.color = "var(--error)";
+        message.innerText = "Password must be at least 8 characters.";
+        return;
+      }
+
+      btn.classList.add("loading"); btn.disabled = true; message.innerText = "";
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/register", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password })
+        });
+        const result = await response.json();
+
+        if (response.status === 200) {
+          message.style.color = "var(--success)"; message.innerText = "Account created safely.";
+          setTimeout(() => window.location.assign("main_interface.html"), 1500);
+        } else if (response.status === 409) {
+          message.style.color = "var(--error)"; message.innerText = "User already exists. Redirecting…";
+          setTimeout(() => window.location.assign("sign_in.html"), 1300);
+        } else {
+          message.style.color = "var(--error)"; message.innerText = result.message || "Failed.";
+        }
+      } catch (err) {
+        message.style.color = "var(--error)"; message.innerText = "Network error while connecting.";
+      } finally {
+        btn.classList.remove("loading"); btn.disabled = false;
+      }
+    }
+
+    document.addEventListener("keydown", e => { if (e.key === "Enter") sendData(); });
+  </script>
+</body>
+</html>

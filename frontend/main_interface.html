@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo.ai | Dashboard</title>
+<link rel="stylesheet" href="index.css">
+<style>
+/* Specific Styles for Main Interface */
+main {
+  position: relative; z-index: 10;
+  display: grid; grid-template-columns: 1fr 1fr;
+  min-height: 100vh; padding-top: 80px;
+}
+
+.hero-panel {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 80px 64px; position: relative;
+}
+.hero-panel::after {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 1px;
+  background: linear-gradient(180deg, transparent, var(--border-h) 30%, var(--border-h) 70%, transparent);
+}
+
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border: 1px solid rgba(132, 94, 247, 0.3);
+  border-radius: 4px; background: rgba(132, 94, 247, 0.08);
+  font-family: 'Syne', sans-serif; font-size: 0.70rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent2); margin-bottom: 32px; width: fit-content;
+  animation: fadeIn 0.8s ease both;
+}
+.hero-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); box-shadow: 0 0 10px var(--accent2); }
+
+h1 { font-size: clamp(3.5rem, 6vw, 6.5rem); margin-bottom: 24px; animation: fadeIn 0.8s 0.1s both; }
+h1 .line-rule { display: block; position: relative; padding-bottom: 20px; font-weight: 400; }
+h1 .line-rule::after { content: ''; position: absolute; bottom: 0; left: 0; width: 60px; height: 2px; background: var(--accent); opacity: 0.8; }
+
+.hero-desc { font-size: 1.05rem; color: var(--muted); line-height: 1.7; max-width: 440px; margin-bottom: 48px; font-weight: 300; animation: fadeIn 0.8s 0.2s both; }
+
+.hero-stats { display: flex; gap: 40px; margin-bottom: 48px; animation: fadeIn 0.8s 0.3s both; }
+.stat { display: flex; flex-direction: column; gap: 6px; }
+.stat-num { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; color: var(--accent); line-height: 1; }
+.stat-label { font-family: 'Syne', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+
+.supported-formats { display: flex; gap: 10px; align-items: center; animation: fadeIn 0.8s 0.4s both; }
+.formats-label { font-family: 'Syne', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-right: 8px; }
+.format-badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; font-size: 0.7rem; font-weight: 600; padding: 6px 12px; }
+
+.upload-panel {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 80px 64px; background: linear-gradient(160deg, transparent, rgba(10,10,15,0.8) 100%);
+  position: relative; animation: fadeIn 0.8s 0.2s both;
+}
+
+.upload-heading {
+  font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 400; margin-bottom: 8px; color: var(--text);
+}
+.upload-heading em { color: var(--accent); font-style: italic; }
+.upload-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 32px; font-weight: 300; }
+
+.drop-zone {
+  border: 1.5px dashed rgba(212, 170, 90, 0.3); background: rgba(212, 170, 90, 0.02);
+  border-radius: var(--radius-md); padding: 56px 32px; text-align: center;
+  cursor: pointer; margin-bottom: 24px; position: relative; overflow: hidden;
+  transition: all 0.3s ease;
+}
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: rgba(212, 170, 90, 0.06); transform: scale(1.02); }
+
+.drop-icon-wrap {
+  display: flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px; border-radius: 50%;
+  background: rgba(212, 170, 90, 0.1); border: 1px solid rgba(212, 170, 90, 0.2);
+  margin: 0 auto 20px; transition: all 0.3s ease;
+}
+.drop-icon-wrap svg { width: 30px; height: 30px; stroke: var(--accent); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.drop-zone:hover .drop-icon-wrap { background: rgba(212, 170, 90, 0.18); border-color: rgba(212, 170, 90, 0.4); box-shadow: 0 8px 24px rgba(212,170,90,0.2); }
+
+.drop-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+.drop-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 24px; }
+.browse-btn {
+  background: transparent; border: 1px solid var(--border-h);
+  color: var(--text); font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; padding: 12px 32px;
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.3s ease;
+}
+.browse-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(212, 170, 90, 0.05); }
+
+#file-input { display: none; }
+
+.progress-bar-wrap { width: 100%; height: 3px; background: var(--surface2); border-radius: 3px; margin-bottom: 24px; overflow: hidden; opacity: 0; transition: opacity 0.3s; }
+.progress-bar-wrap.visible { opacity: 1; }
+.progress-bar { height: 100%; width: 0%; background: var(--accent-g); transition: width 0.3s ease; box-shadow: var(--shadow-glow); }
+
+.file-list { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; max-height: 280px; overflow-y: auto; }
+.file-item {
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  transition: border-color 0.2s; animation: fadeIn 0.4s ease both;
+}
+.file-item:hover { border-color: var(--border-h); }
+.file-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; flex-shrink: 0; background: var(--bg); }
+.file-info { flex: 1; overflow: hidden; }
+.file-name { font-size: 0.85rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; }
+.file-size { font-size: 0.7rem; color: var(--muted); }
+.file-status { font-family: 'Syne', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; flex-shrink: 0; }
+.file-status.ready { color: var(--accent2); }
+.file-status.uploading { color: var(--accent); }
+.file-status.done { color: var(--success); }
+.file-status.error { color: var(--error); }
+</style>
+</head>
+<body>
+
+<div class="bg-layer">
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+  <div class="bg-blob bg-blob-3"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+</div>
+
+<nav>
+  <a href="#" class="logo">Photo<span>.ai</span></a>
+  <div class="nav-pill">
+    <a href="#">Gallery</a>
+    <a href="#">Studio</a>
+    <a href="#">Docs</a>
+  </div>
+</nav>
+
+<main>
+  <section class="hero-panel">
+    <div class="hero-tag">
+      <div class="hero-tag-dot"></div>
+      Powered by YOLOv8 + Neural Inpainting
+    </div>
+    <h1><span class="line-rule">Upload.</span><span class="line-rule">Transform.</span><em>Deliver.</em></h1>
+    <p class="hero-desc">Professional-grade image processing for creators and developers. Drop your images, select detected objects, and let AI handle the rest.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">YOLOv8</span><span class="stat-label">Detection</span></div>
+      <div class="stat"><span class="stat-num">U-Net</span><span class="stat-label">Segmentation</span></div>
+      <div class="stat"><span class="stat-num">AI</span><span class="stat-label">Inpainting</span></div>
+    </div>
+    <div class="supported-formats">
+      <span class="formats-label">Accepts</span>
+      <span class="format-badge">JPEG</span>
+      <span class="format-badge">JPG</span>
+    </div>
+  </section>
+
+  <section class="upload-panel">
+    <div class="upload-heading">Start <em>Processing.</em></div>
+    <div class="upload-sub">Select your image to begin object detection</div>
+    
+    <div class="drop-zone" id="drop-zone">
+      <div class="drop-icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <div class="drop-title">Drop your JPEG image here</div>
+      <div class="drop-sub">or click to browse from your device</div>
+      <button class="browse-btn" id="browse-btn">Browse Files</button>
+      <input type="file" id="file-input" multiple accept=".jpg,.jpeg,image/jpeg">
+    </div>
+
+    <div class="progress-bar-wrap" id="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+    
+    <button class="btn-primary" id="upload-btn" disabled>
+      <span class="btn-text">Upload &amp; Analyse</span>
+      <div class="spinner"></div>
+    </button>
+    
+    <div class="file-list" id="file-list"></div>
+  </section>
+</main>
+
+<div class="notif" id="notification"></div>
+
+<script>
+const API_URL = 'http://localhost:8000/select';
+
+const dropZone    = document.getElementById('drop-zone');
+const browseBtn   = document.getElementById('browse-btn');
+const fileInput   = document.getElementById('file-input');
+const fileList    = document.getElementById('file-list');
+const uploadBtn   = document.getElementById('upload-btn');
+const notifEl     = document.getElementById('notification');
+const progressWrap = document.getElementById('progress-wrap');
+const progressBar  = document.getElementById('progress-bar');
+const uploadBtnText= uploadBtn.querySelector('.btn-text');
+
+let entries = [];
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  handleFiles([...e.dataTransfer.files]);
+});
+dropZone.addEventListener('click', e => { if (e.target !== browseBtn) fileInput.click(); });
+browseBtn.addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+fileInput.addEventListener('change', () => { handleFiles([...fileInput.files]); fileInput.value = ''; });
+
+function handleFiles(newFiles) {
+  let rejected = 0;
+  newFiles.forEach(file => {
+    if (!file.type.includes('jpeg')) { rejected++; return; }
+    const statusEl = renderFile(file);
+    entries.push({ file, statusEl });
+  });
+  if (rejected > 0) showNotification(`${rejected} file${rejected > 1 ? 's' : ''} skipped — only JPEG allowed`, true);
+  uploadBtn.disabled = entries.length === 0;
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function renderFile(file) {
+  const item = document.createElement('div');
+  item.className = 'file-item';
+  const thumb = document.createElement('img');
+  thumb.className = 'file-thumb';
+  const reader = new FileReader();
+  reader.onload = e => { thumb.src = e.target.result; };
+  reader.readAsDataURL(file);
+  const info = document.createElement('div'); info.className = 'file-info';
+  const name = document.createElement('div'); name.className = 'file-name'; name.textContent = file.name;
+  const size = document.createElement('div'); size.className = 'file-size'; size.textContent = formatSize(file.size);
+  info.append(name, size);
+  const status = document.createElement('div'); status.className = 'file-status ready'; status.textContent = 'Ready';
+  item.append(thumb, info, status);
+  fileList.appendChild(item);
+  return status;
+}
+
+uploadBtn.addEventListener('click', async () => {
+  if (entries.length === 0) return;
+  uploadBtn.classList.add('loading');
+  uploadBtn.disabled = true;
+  progressWrap.classList.add('visible');
+
+  let successCount = 0, errorCount = 0;
+  const allResults = [];
+
+  for (let i = 0; i < entries.length; i++) {
+    const { file, statusEl } = entries[i];
+    progressBar.style.width = `${Math.round((i / entries.length) * 100)}%`;
+    statusEl.className = 'file-status uploading'; statusEl.textContent = 'Uploading…';
+
+    const formData = new FormData();
+    formData.append('img', file);
+    const token = localStorage.getItem('token');
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+    try {
+      const response = await fetch(API_URL, { method: 'POST', headers, body: formData });
+      if (response.ok) {
+        const data = await response.json();
+        statusEl.className = 'file-status done'; statusEl.textContent = 'Done ✓';
+        successCount++;
+        allResults.push({ filename: file.name, image: data.image, labels: data.labels });
+      } else {
+        statusEl.className = 'file-status error'; statusEl.textContent = `Error ${response.status}`;
+        errorCount++;
+      }
+    } catch {
+      statusEl.className = 'file-status error'; statusEl.textContent = 'Network error';
+      errorCount++;
+    }
+  }
+
+  progressBar.style.width = '100%';
+
+  if (allResults.length > 0) {
+    sessionStorage.setItem('uploadedImage',  allResults[allResults.length - 1].image);
+    sessionStorage.setItem('uploadedLabels', JSON.stringify(allResults[allResults.length - 1].labels));
+    sessionStorage.setItem('allResults', JSON.stringify(allResults));
+  }
+
+  if (errorCount === 0) {
+    showNotification(`✓ ${successCount} image${successCount > 1 ? 's' : ''} processed successfully`);
+  } else {
+    showNotification(`⚠ ${successCount} processed, ${errorCount} failed`, true);
+  }
+
+  uploadBtn.classList.remove('loading');
+  uploadBtn.disabled = true;
+  entries = [];
+
+  if (errorCount === 0) {
+    setTimeout(() => window.location.assign('selection.html'), 1300);
+  } else {
+    progressWrap.classList.remove('visible');
+    progressBar.style.width = '0%';
+  }
+});
+
+function showNotification(msg, isError = false) {
+  notifEl.textContent = msg;
+  notifEl.className = 'notif' + (isError ? ' err show' : ' show');
+  setTimeout(() => notifEl.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>

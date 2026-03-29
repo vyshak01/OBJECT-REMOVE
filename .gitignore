@@ -1,0 +1,30 @@
+# Python Virtual Environment
+Include/
+Lib/
+Scripts/
+pyvenv.cfg
+share/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Dependencies
+venv/
+env/
+.venv/
+
+# Environment Variables
+.env
+.env.*
+
+# Database
+*.sqlite
+db.sqlite
+*.sqlite3
+
+# OS Files
+.DS_Store
+Thumbs.db
